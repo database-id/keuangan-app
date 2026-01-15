@@ -287,6 +287,7 @@ function switchPage(pageName) {
     // Refresh data based on page
     if (pageName === 'dashboard') updateDashboard();
     else if (pageName === 'transaksi') loadTransactionList();
+    else if (pageName === 'tabungan') loadTabunganPage();
     else if (pageName === 'budget') loadBudgetSettings();
     else if (pageName === 'laporan') generateReport();
 }
@@ -341,15 +342,15 @@ function updateDashboard() {
     updateExpenseChart(summary);
     updateTrendChart();
 
-    // Update accumulated savings
-    updateAccumulatedSavings();
-
     // Update recent transactions
     loadRecentTransactions();
 }
 
-// Calculate and display accumulated savings from all months
-function updateAccumulatedSavings() {
+// ==================== TABUNGAN PAGE ====================
+let savingsLineChart = null;
+let savingsBarChart = null;
+
+function loadTabunganPage() {
     const transactions = getUserTransactions();
 
     // Group transactions by month
@@ -367,9 +368,14 @@ function updateAccumulatedSavings() {
         }
     });
 
-    // Calculate balance for each month and total
-    const months = Object.keys(monthlyData).sort().reverse(); // Most recent first
+    // Sort months chronologically
+    const months = Object.keys(monthlyData).sort();
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
     let totalAccumulated = 0;
+    const chartLabels = [];
+    const accumulatedData = [];
+    const monthlyBalances = [];
     const historyItems = [];
 
     months.forEach(month => {
@@ -377,29 +383,101 @@ function updateAccumulatedSavings() {
         const balance = data.income - data.expense;
         totalAccumulated += balance;
 
-        // Format month name
         const [year, monthNum] = month.split('-');
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         const monthLabel = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
 
-        historyItems.push({
+        chartLabels.push(monthLabel);
+        accumulatedData.push(totalAccumulated);
+        monthlyBalances.push(balance);
+
+        historyItems.unshift({
             label: monthLabel,
+            income: data.income,
+            expense: data.expense,
             balance: balance
         });
     });
 
-    // Update total accumulated savings display
+    // Update total accumulated savings
     document.getElementById('accumulatedSavings').textContent = formatRupiah(totalAccumulated);
 
-    // Update history list
+    // Update Line Chart (Accumulated Savings)
+    const lineCtx = document.getElementById('savingsLineChart').getContext('2d');
+    if (savingsLineChart) savingsLineChart.destroy();
+
+    savingsLineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Total Tabungan',
+                data: accumulatedData,
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#10B981',
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => 'Rp ' + (value / 1000000).toFixed(1) + 'jt'
+                    }
+                }
+            }
+        }
+    });
+
+    // Update Bar Chart (Monthly Balances)
+    const barCtx = document.getElementById('savingsBarChart').getContext('2d');
+    if (savingsBarChart) savingsBarChart.destroy();
+
+    savingsBarChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Sisa Saldo',
+                data: monthlyBalances,
+                backgroundColor: monthlyBalances.map(v => v >= 0 ? '#10B981' : '#EF4444'),
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        callback: value => 'Rp ' + (value / 1000000).toFixed(1) + 'jt'
+                    }
+                }
+            }
+        }
+    });
+
+    // Update History Table
     const historyContainer = document.getElementById('savingsHistoryList');
     if (historyItems.length === 0) {
         historyContainer.innerHTML = '<p class="no-history">Belum ada data transaksi</p>';
     } else {
         historyContainer.innerHTML = historyItems.map(item => `
-            <div class="history-item">
-                <span class="month-label">${item.label}</span>
-                <span class="month-amount ${item.balance >= 0 ? 'positive' : 'negative'}">
+            <div class="history-row">
+                <span class="month-name">${item.label}</span>
+                <span class="income">+${formatRupiah(item.income)}</span>
+                <span class="expense">-${formatRupiah(item.expense)}</span>
+                <span class="balance ${item.balance >= 0 ? 'positive' : 'negative'}">
                     ${item.balance >= 0 ? '+' : ''}${formatRupiah(item.balance)}
                 </span>
             </div>

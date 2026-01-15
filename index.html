@@ -67,6 +67,9 @@
                 <li class="nav-item" data-page="transaksi">
                     <span class="icon">💰</span> Transaksi
                 </li>
+                <li class="nav-item" data-page="tabungan">
+                    <span class="icon">🏦</span> Tabungan
+                </li>
                 <li class="nav-item" data-page="budget">
                     <span class="icon">📋</span> Atur Budget
                 </li>
@@ -109,22 +112,6 @@
                         <h3>Sisa Saldo</h3>
                         <p id="totalBalance">Rp 0</p>
                         <small>Bulan ini</small>
-                    </div>
-                </div>
-
-                <!-- AKUMULASI TABUNGAN -->
-                <div class="savings-accumulated">
-                    <div class="savings-main-card">
-                        <div class="savings-icon">💰</div>
-                        <div class="savings-info">
-                            <h3>Total Tabungan Terkumpul</h3>
-                            <p id="accumulatedSavings">Rp 0</p>
-                            <small>Akumulasi sisa saldo dari semua bulan</small>
-                        </div>
-                    </div>
-                    <div class="savings-history">
-                        <h4>Riwayat Saldo Bulanan</h4>
-                        <div id="savingsHistoryList"></div>
                     </div>
                 </div>
 
@@ -254,6 +241,47 @@
                 </div>
 
                 <div class="transaction-list" id="transactionList"></div>
+            </section>
+
+            <!-- TABUNGAN -->
+            <section id="tabunganSection" class="content-section" style="display:none;">
+                <h2>Tabungan Saya</h2>
+                <p class="section-desc">Pantau perkembangan tabungan dari waktu ke waktu</p>
+
+                <div class="savings-overview">
+                    <div class="savings-main-card">
+                        <div class="savings-icon">💰</div>
+                        <div class="savings-info">
+                            <h3>Total Tabungan Terkumpul</h3>
+                            <p id="accumulatedSavings">Rp 0</p>
+                            <small>Akumulasi sisa saldo dari semua bulan</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="savings-charts">
+                    <div class="chart-box">
+                        <h3>Grafik Perkembangan Tabungan</h3>
+                        <canvas id="savingsLineChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Saldo per Bulan</h3>
+                        <canvas id="savingsBarChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="savings-history-section">
+                    <h3>Riwayat Saldo Bulanan</h3>
+                    <div class="savings-history-table">
+                        <div class="history-header">
+                            <span>Bulan</span>
+                            <span>Pemasukan</span>
+                            <span>Pengeluaran</span>
+                            <span>Sisa Saldo</span>
+                        </div>
+                        <div id="savingsHistoryList"></div>
+                    </div>
+                </div>
             </section>
 
             <!-- BUDGET -->
