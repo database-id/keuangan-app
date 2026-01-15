@@ -341,8 +341,70 @@ function updateDashboard() {
     updateExpenseChart(summary);
     updateTrendChart();
 
+    // Update accumulated savings
+    updateAccumulatedSavings();
+
     // Update recent transactions
     loadRecentTransactions();
+}
+
+// Calculate and display accumulated savings from all months
+function updateAccumulatedSavings() {
+    const transactions = getUserTransactions();
+
+    // Group transactions by month
+    const monthlyData = {};
+
+    transactions.forEach(tx => {
+        const month = tx.date.substring(0, 7); // YYYY-MM
+        if (!monthlyData[month]) {
+            monthlyData[month] = { income: 0, expense: 0 };
+        }
+        if (tx.type === 'income') {
+            monthlyData[month].income += tx.amount;
+        } else {
+            monthlyData[month].expense += tx.amount;
+        }
+    });
+
+    // Calculate balance for each month and total
+    const months = Object.keys(monthlyData).sort().reverse(); // Most recent first
+    let totalAccumulated = 0;
+    const historyItems = [];
+
+    months.forEach(month => {
+        const data = monthlyData[month];
+        const balance = data.income - data.expense;
+        totalAccumulated += balance;
+
+        // Format month name
+        const [year, monthNum] = month.split('-');
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const monthLabel = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+
+        historyItems.push({
+            label: monthLabel,
+            balance: balance
+        });
+    });
+
+    // Update total accumulated savings display
+    document.getElementById('accumulatedSavings').textContent = formatRupiah(totalAccumulated);
+
+    // Update history list
+    const historyContainer = document.getElementById('savingsHistoryList');
+    if (historyItems.length === 0) {
+        historyContainer.innerHTML = '<p class="no-history">Belum ada data transaksi</p>';
+    } else {
+        historyContainer.innerHTML = historyItems.map(item => `
+            <div class="history-item">
+                <span class="month-label">${item.label}</span>
+                <span class="month-amount ${item.balance >= 0 ? 'positive' : 'negative'}">
+                    ${item.balance >= 0 ? '+' : ''}${formatRupiah(item.balance)}
+                </span>
+            </div>
+        `).join('');
+    }
 }
 
 function updateExpenseChart(summary) {
