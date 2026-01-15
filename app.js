@@ -229,10 +229,42 @@ function showMainApp() {
     document.getElementById('reportMonth').value = getCurrentMonth();
     document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
 
+    // Auto-add monthly salary if not exists for current month
+    ensureMonthlySalary();
+
     // Load initial data
     loadBudgetSettings();
     updateDashboard();
     loadTransactionList();
+}
+
+// Ensure salary income exists for current month
+function ensureMonthlySalary() {
+    const currentMonth = getCurrentMonth();
+    const transactions = getUserTransactions();
+    const budget = getUserBudget();
+
+    // Check if salary already exists for this month
+    const hasSalaryThisMonth = transactions.some(tx =>
+        tx.type === 'income' &&
+        tx.description === 'Gaji Bulanan' &&
+        tx.date.startsWith(currentMonth)
+    );
+
+    if (!hasSalaryThisMonth) {
+        const today = new Date().toISOString().split('T')[0];
+        const salaryTx = {
+            id: Date.now(),
+            type: 'income',
+            category: 'living',
+            amount: budget.gaji,
+            date: today,
+            description: 'Gaji Bulanan',
+            createdAt: new Date().toISOString()
+        };
+        transactions.push(salaryTx);
+        saveUserTransactions(transactions);
+    }
 }
 
 function switchPage(pageName) {
