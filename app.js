@@ -49,7 +49,7 @@ function setCurrentUser(username) {
 function registerUser(username, password, gaji) {
     const users = getUsers();
     if (users[username]) {
-        showToast('Username sudah digunakan!', 'error');
+        showToast('Nama pengguna sudah digunakan!', 'error');
         return false;
     }
     users[username] = {
@@ -91,11 +91,11 @@ function registerUser(username, password, gaji) {
 function loginUser(username, password) {
     const users = getUsers();
     if (!users[username]) {
-        showToast('Username tidak ditemukan!', 'error');
+        showToast('Nama pengguna tidak ditemukan!', 'error');
         return false;
     }
     if (users[username].password !== btoa(password)) {
-        showToast('Password salah!', 'error');
+        showToast('Kata sandi salah!', 'error');
         return false;
     }
     setCurrentUser(username);
@@ -113,12 +113,12 @@ function changePassword(oldPass, newPass) {
     const username = getCurrentUser();
     const users = getUsers();
     if (users[username].password !== btoa(oldPass)) {
-        showToast('Password lama salah!', 'error');
+        showToast('Kata sandi lama salah!', 'error');
         return false;
     }
     users[username].password = btoa(newPass);
     setStorage(STORAGE_KEYS.USERS, users);
-    showToast('Password berhasil diubah!');
+    showToast('Kata sandi berhasil diubah!');
     return true;
 }
 
@@ -1224,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const gaji = parseInt(document.getElementById('regGaji').value);
 
         if (password !== confirm) {
-            showToast('Password tidak cocok!', 'error');
+            showToast('Kata sandi tidak cocok!', 'error');
             return;
         }
 
@@ -1332,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmPass = document.getElementById('confirmNewPassword').value;
 
         if (newPass !== confirmPass) {
-            showToast('Password baru tidak cocok!', 'error');
+            showToast('Kata sandi baru tidak cocok!', 'error');
             return;
         }
 
