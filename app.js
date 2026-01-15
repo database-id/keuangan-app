@@ -1202,4 +1202,44 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('clearData').addEventListener('click', clearAllData);
+
+    // Quick Income Form
+    document.getElementById('quickIncomeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const amount = parseInt(document.getElementById('quickIncomeAmount').value);
+        const description = document.getElementById('quickIncomeDesc').value || 'Pemasukan Tambahan';
+        const date = document.getElementById('quickIncomeDate').value;
+
+        const tx = {
+            type: 'income',
+            category: 'living',
+            amount: amount,
+            date: date,
+            description: description
+        };
+
+        addTransaction(tx);
+        closeIncomeModal();
+        this.reset();
+        updateDashboard();
+        loadTransactionList();
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('incomeModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeIncomeModal();
+        }
+    });
 });
+
+// ==================== QUICK INCOME MODAL ====================
+function showQuickIncome() {
+    document.getElementById('quickIncomeDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('incomeModal').classList.add('show');
+}
+
+function closeIncomeModal() {
+    document.getElementById('incomeModal').classList.remove('show');
+    document.getElementById('quickIncomeForm').reset();
+}

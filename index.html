@@ -90,6 +90,10 @@
                     <input type="month" id="dashboardMonth">
                 </div>
 
+                <div class="quick-actions">
+                    <button class="btn btn-success" onclick="showQuickIncome()">+ Tambah Pemasukan</button>
+                </div>
+
                 <div class="stats-grid">
                     <div class="stat-card income">
                         <h3>Total Pemasukan</h3>
@@ -437,6 +441,29 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- MODAL TAMBAH PEMASUKAN -->
+    <div id="incomeModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeIncomeModal()">&times;</span>
+            <h3>Tambah Pemasukan</h3>
+            <form id="quickIncomeForm">
+                <div class="form-group">
+                    <label>Jumlah (Rp)</label>
+                    <input type="number" id="quickIncomeAmount" placeholder="500000" required>
+                </div>
+                <div class="form-group">
+                    <label>Keterangan</label>
+                    <input type="text" id="quickIncomeDesc" placeholder="Contoh: Bonus, Freelance, THR">
+                </div>
+                <div class="form-group">
+                    <label>Tanggal</label>
+                    <input type="date" id="quickIncomeDate" required>
+                </div>
+                <button type="submit" class="btn btn-success">Simpan Pemasukan</button>
+            </form>
+        </div>
     </div>
 
     <!-- TOAST NOTIFICATION -->
