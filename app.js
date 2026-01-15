@@ -221,7 +221,7 @@ function showLoginPage() {
 function showMainApp() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'flex';
-    document.getElementById('welcomeUser').textContent = `Halo, ${getCurrentUser()}!`;
+    document.getElementById('welcomeUser').textContent = `Hello, ${getCurrentUser()}!`;
 
     // Set default month
     document.getElementById('dashboardMonth').value = getCurrentMonth();
