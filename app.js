@@ -49,7 +49,7 @@ function setCurrentUser(username) {
 function registerUser(username, password, gaji) {
     const users = getUsers();
     if (users[username]) {
-        showToast('Nama pengguna sudah digunakan!', 'error');
+        showToast('Username already exists!', 'error');
         return false;
     }
     users[username] = {
@@ -84,28 +84,28 @@ function registerUser(username, password, gaji) {
     }];
     setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
 
-    showToast('Registrasi berhasil! Silakan login.');
+    showToast('Registration successful! Please login.');
     return true;
 }
 
 function loginUser(username, password) {
     const users = getUsers();
     if (!users[username]) {
-        showToast('Nama pengguna tidak ditemukan!', 'error');
+        showToast('Username not found!', 'error');
         return false;
     }
     if (users[username].password !== btoa(password)) {
-        showToast('Kata sandi salah!', 'error');
+        showToast('Wrong password!', 'error');
         return false;
     }
     setCurrentUser(username);
-    showToast(`Selamat datang, ${username}!`);
+    showToast(`Welcome, ${username}!`);
     return true;
 }
 
 function logoutUser() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
-    showToast('Berhasil keluar');
+    showToast('Logged out successfully');
     showLoginPage();
 }
 
@@ -113,12 +113,12 @@ function changePassword(oldPass, newPass) {
     const username = getCurrentUser();
     const users = getUsers();
     if (users[username].password !== btoa(oldPass)) {
-        showToast('Kata sandi lama salah!', 'error');
+        showToast('Old password is incorrect!', 'error');
         return false;
     }
     users[username].password = btoa(newPass);
     setStorage(STORAGE_KEYS.USERS, users);
-    showToast('Kata sandi berhasil diubah!');
+    showToast('Password changed successfully!');
     return true;
 }
 
@@ -166,7 +166,7 @@ function addTransaction(tx) {
     tx.createdAt = new Date().toISOString();
     transactions.push(tx);
     saveUserTransactions(transactions);
-    showToast('Transaksi berhasil ditambahkan!');
+    showToast('Transaction added successfully!');
     return tx;
 }
 
@@ -174,7 +174,7 @@ function deleteTransaction(id) {
     let transactions = getUserTransactions();
     transactions = transactions.filter(t => t.id !== id);
     saveUserTransactions(transactions);
-    showToast('Transaksi berhasil dihapus!');
+    showToast('Transaction deleted successfully!');
 }
 
 function getTransactionsByMonth(month) {
@@ -632,10 +632,10 @@ function loadTransactionList() {
 
 function getCategoryLabel(category) {
     const labels = {
-        living: 'Kebutuhan',
-        saving: 'Tabungan',
-        playing: 'Hiburan',
-        emergency: 'Darurat'
+        living: 'Living',
+        saving: 'Saving',
+        playing: 'Playing',
+        emergency: 'Emergency'
     };
     return labels[category] || category;
 }
@@ -677,7 +677,7 @@ function createTransactionHTML(tx, showActions = false) {
 }
 
 function handleDeleteTransaction(id) {
-    if (confirm('Yakin ingin menghapus transaksi ini?')) {
+    if (confirm('Are you sure you want to delete this transaction?')) {
         deleteTransaction(id);
         loadTransactionList();
         updateDashboard();
@@ -1111,14 +1111,14 @@ function exportCSV() {
     const transactions = getTransactionsByMonth(month);
 
     if (transactions.length === 0) {
-        showToast('Tidak ada data untuk diekspor', 'warning');
+        showToast('No data to export', 'warning');
         return;
     }
 
-    const headers = ['Tanggal', 'Tipe', 'Kategori', 'Jumlah', 'Keterangan'];
+    const headers = ['Date', 'Type', 'Category', 'Amount', 'Description'];
     const rows = transactions.map(tx => [
         tx.date,
-        tx.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+        tx.type === 'income' ? 'Income' : 'Expense',
         getCategoryLabel(tx.category),
         tx.amount,
         tx.description || ''
@@ -1126,7 +1126,7 @@ function exportCSV() {
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     downloadFile(`keuangan_${month}.csv`, csv, 'text/csv');
-    showToast('File CSV berhasil diunduh!');
+    showToast('CSV file downloaded successfully!');
 }
 
 // ==================== DATA MANAGEMENT ====================
@@ -1140,7 +1140,7 @@ function exportAllData() {
 
     const json = JSON.stringify(data, null, 2);
     downloadFile(`keuangan_backup_${username}.json`, json, 'application/json');
-    showToast('Data berhasil diekspor!');
+    showToast('Data exported successfully!');
 }
 
 function importData(file) {
@@ -1156,19 +1156,19 @@ function importData(file) {
                 saveUserTransactions(data.transactions);
             }
 
-            showToast('Data berhasil diimpor!');
+            showToast('Data imported successfully!');
             loadBudgetSettings();
             updateDashboard();
             loadTransactionList();
         } catch (error) {
-            showToast('Format file tidak valid!', 'error');
+            showToast('Invalid file format!', 'error');
         }
     };
     reader.readAsText(file);
 }
 
 function clearAllData() {
-    if (confirm('PERINGATAN: Semua data akan dihapus permanen. Lanjutkan?')) {
+    if (confirm('WARNING: All data will be permanently deleted. Continue?')) {
         const username = getCurrentUser();
 
         const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
@@ -1179,7 +1179,7 @@ function clearAllData() {
         transactions[username] = [];
         setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
 
-        showToast('Semua data berhasil dihapus!');
+        showToast('All data deleted successfully!');
         loadBudgetSettings();
         updateDashboard();
         loadTransactionList();
@@ -1224,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const gaji = parseInt(document.getElementById('regGaji').value);
 
         if (password !== confirm) {
-            showToast('Kata sandi tidak cocok!', 'error');
+            showToast('Passwords do not match!', 'error');
             return;
         }
 
@@ -1294,7 +1294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         budget.gaji = parseInt(document.getElementById('gajiInput').value);
         saveUserBudget(budget);
         updateBudgetDisplay();
-        showToast('Gaji berhasil diupdate!');
+        showToast('Salary updated successfully!');
     });
 
     document.getElementById('saveBudget').addEventListener('click', function() {
@@ -1304,7 +1304,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const emergency = parseInt(document.getElementById('emergencyPercent').value);
 
         if (living + saving + playing + emergency !== 100) {
-            showToast('Total persentase harus 100%!', 'error');
+            showToast('Total percentage must be 100%!', 'error');
             return;
         }
 
@@ -1316,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emergency
         };
         saveUserBudget(budget);
-        showToast('Pengaturan anggaran berhasil disimpan!');
+        showToast('Budget settings saved successfully!');
         updateDashboard();
     });
 
@@ -1332,7 +1332,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const confirmPass = document.getElementById('confirmNewPassword').value;
 
         if (newPass !== confirmPass) {
-            showToast('Kata sandi baru tidak cocok!', 'error');
+            showToast('New passwords do not match!', 'error');
             return;
         }
 
@@ -1346,7 +1346,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('importData').addEventListener('click', function() {
         const file = document.getElementById('importFile').files[0];
         if (!file) {
-            showToast('Pilih file terlebih dahulu!', 'warning');
+            showToast('Please select a file first!', 'warning');
             return;
         }
         importData(file);
