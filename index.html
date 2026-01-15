@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wafi Family Finance</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="page">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>Wafi Family Finance</h1>
+                <p>Kelola keuangan rumah tangga dengan bijak</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Masuk</button>
+                <p class="register-link">Belum punya akun? <a href="#" id="showRegister">Daftar di sini</a></p>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="registerForm" class="login-form" style="display:none;">
+                <div class="form-group">
+                    <label for="regUsername">Username</label>
+                    <input type="text" id="regUsername" placeholder="Buat username" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" placeholder="Buat password" required>
+                </div>
+                <div class="form-group">
+                    <label for="regConfirm">Konfirmasi Password</label>
+                    <input type="password" id="regConfirm" placeholder="Ulangi password" required>
+                </div>
+                <div class="form-group">
+                    <label for="regGaji">Gaji Bulanan (Rp)</label>
+                    <input type="number" id="regGaji" placeholder="6000000" value="6000000" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Daftar</button>
+                <p class="register-link"><a href="#" id="showLogin">Sudah punya akun? Masuk</a></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="page" style="display:none;">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>Wafi Family Finance</h2>
+                <p id="welcomeUser">Halo, User!</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </li>
+                <li class="nav-item" data-page="transaksi">
+                    <span class="icon">💰</span> Transaksi
+                </li>
+                <li class="nav-item" data-page="budget">
+                    <span class="icon">📋</span> Atur Budget
+                </li>
+                <li class="nav-item" data-page="laporan">
+                    <span class="icon">📈</span> Laporan
+                </li>
+                <li class="nav-item" data-page="pengaturan">
+                    <span class="icon">⚙️</span> Pengaturan
+                </li>
+            </ul>
+            <button class="btn btn-logout" id="logoutBtn">Keluar</button>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- DASHBOARD -->
+            <section id="dashboardSection" class="content-section">
+                <h2>Dashboard Keuangan</h2>
+                <div class="month-selector">
+                    <label>Bulan:</label>
+                    <input type="month" id="dashboardMonth">
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card income">
+                        <h3>Total Pemasukan</h3>
+                        <p id="totalIncome">Rp 0</p>
+                    </div>
+                    <div class="stat-card expense">
+                        <h3>Total Pengeluaran</h3>
+                        <p id="totalExpense">Rp 0</p>
+                    </div>
+                    <div class="stat-card balance">
+                        <h3>Sisa Saldo</h3>
+                        <p id="totalBalance">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="budget-overview">
+                    <h3>Status Budget Bulan Ini</h3>
+                    <div class="budget-cards">
+                        <div class="budget-card living">
+                            <h4>🏠 Living</h4>
+                            <div class="budget-info">
+                                <span>Budget: <strong id="livingBudget">Rp 0</strong></span>
+                                <span>Terpakai: <strong id="livingUsed">Rp 0</strong></span>
+                                <span>Sisa: <strong id="livingRemain">Rp 0</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress" id="livingProgress"></div>
+                            </div>
+                        </div>
+                        <div class="budget-card saving">
+                            <h4>💎 Saving</h4>
+                            <div class="budget-info">
+                                <span>Target: <strong id="savingBudget">Rp 0</strong></span>
+                                <span>Tersimpan: <strong id="savingUsed">Rp 0</strong></span>
+                                <span>Kurang: <strong id="savingRemain">Rp 0</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress saving-progress" id="savingProgress"></div>
+                            </div>
+                        </div>
+                        <div class="budget-card playing">
+                            <h4>🎮 Playing</h4>
+                            <div class="budget-info">
+                                <span>Budget: <strong id="playingBudget">Rp 0</strong></span>
+                                <span>Terpakai: <strong id="playingUsed">Rp 0</strong></span>
+                                <span>Sisa: <strong id="playingRemain">Rp 0</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress playing-progress" id="playingProgress"></div>
+                            </div>
+                        </div>
+                        <div class="budget-card emergency">
+                            <h4>🚨 Emergency</h4>
+                            <div class="budget-info">
+                                <span>Budget: <strong id="emergencyBudget">Rp 0</strong></span>
+                                <span>Terpakai: <strong id="emergencyUsed">Rp 0</strong></span>
+                                <span>Sisa: <strong id="emergencyRemain">Rp 0</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress emergency-progress" id="emergencyProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <h3>Distribusi Pengeluaran</h3>
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Trend Bulanan</h3>
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="recent-transactions">
+                    <h3>Transaksi Terakhir</h3>
+                    <div id="recentList"></div>
+                </div>
+            </section>
+
+            <!-- TRANSAKSI -->
+            <section id="transaksiSection" class="content-section" style="display:none;">
+                <h2>Kelola Transaksi</h2>
+
+                <div class="transaction-form-container">
+                    <form id="transactionForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tipe</label>
+                                <select id="txType" required>
+                                    <option value="expense">Pengeluaran</option>
+                                    <option value="income">Pemasukan</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Kategori</label>
+                                <select id="txCategory" required>
+                                    <option value="living">Living (Kebutuhan)</option>
+                                    <option value="saving">Saving (Tabungan)</option>
+                                    <option value="playing">Playing (Hiburan)</option>
+                                    <option value="emergency">Emergency (Darurat)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Jumlah (Rp)</label>
+                                <input type="number" id="txAmount" placeholder="100000" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Tanggal</label>
+                                <input type="date" id="txDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Keterangan</label>
+                            <input type="text" id="txDescription" placeholder="Contoh: Belanja bulanan">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tambah Transaksi</button>
+                    </form>
+                </div>
+
+                <div class="transaction-filters">
+                    <input type="month" id="filterMonth">
+                    <select id="filterType">
+                        <option value="all">Semua Tipe</option>
+                        <option value="income">Pemasukan</option>
+                        <option value="expense">Pengeluaran</option>
+                    </select>
+                    <select id="filterCategory">
+                        <option value="all">Semua Kategori</option>
+                        <option value="living">Living</option>
+                        <option value="saving">Saving</option>
+                        <option value="playing">Playing</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+                </div>
+
+                <div class="transaction-list" id="transactionList"></div>
+            </section>
+
+            <!-- BUDGET -->
+            <section id="budgetSection" class="content-section" style="display:none;">
+                <h2>Atur Pembagian Budget</h2>
+                <p class="section-desc">Atur persentase pembagian gaji bulanan kamu</p>
+
+                <div class="budget-settings">
+                    <div class="gaji-setting">
+                        <label>Gaji Bulanan</label>
+                        <input type="number" id="gajiInput" placeholder="6000000">
+                        <button class="btn btn-secondary" id="updateGaji">Update Gaji</button>
+                    </div>
+
+                    <div class="percentage-settings">
+                        <div class="percentage-item">
+                            <label>🏠 Living (Kebutuhan Pokok)</label>
+                            <div class="percentage-input">
+                                <input type="range" id="livingPercent" min="0" max="100" value="50">
+                                <span id="livingPercentValue">50%</span>
+                            </div>
+                            <p class="amount-preview">= Rp <span id="livingAmount">0</span></p>
+                        </div>
+                        <div class="percentage-item">
+                            <label>💎 Saving (Tabungan)</label>
+                            <div class="percentage-input">
+                                <input type="range" id="savingPercent" min="0" max="100" value="30">
+                                <span id="savingPercentValue">30%</span>
+                            </div>
+                            <p class="amount-preview">= Rp <span id="savingAmount">0</span></p>
+                        </div>
+                        <div class="percentage-item">
+                            <label>🎮 Playing (Hiburan)</label>
+                            <div class="percentage-input">
+                                <input type="range" id="playingPercent" min="0" max="100" value="10">
+                                <span id="playingPercentValue">10%</span>
+                            </div>
+                            <p class="amount-preview">= Rp <span id="playingAmount">0</span></p>
+                        </div>
+                        <div class="percentage-item emergency-item">
+                            <label>🚨 Emergency (Dana Darurat)</label>
+                            <div class="percentage-input">
+                                <input type="range" id="emergencyPercent" min="0" max="100" value="10">
+                                <span id="emergencyPercentValue">10%</span>
+                            </div>
+                            <p class="amount-preview">= Rp <span id="emergencyAmount">0</span></p>
+                        </div>
+                    </div>
+
+                    <div class="total-percentage">
+                        <span>Total: <strong id="totalPercent">100%</strong></span>
+                        <span id="percentWarning" class="warning" style="display:none;">Total harus 100%!</span>
+                    </div>
+
+                    <button class="btn btn-primary" id="saveBudget">Simpan Pengaturan Budget</button>
+                </div>
+            </section>
+
+            <!-- LAPORAN -->
+            <section id="laporanSection" class="content-section" style="display:none;">
+                <h2>Laporan Keuangan</h2>
+
+                <div class="report-filters">
+                    <div class="form-group">
+                        <label>Periode</label>
+                        <select id="reportPeriod">
+                            <option value="month">Bulanan</option>
+                            <option value="year">Tahunan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Bulan/Tahun</label>
+                        <input type="month" id="reportMonth">
+                    </div>
+                    <button class="btn btn-secondary" id="generateReport">Tampilkan Laporan</button>
+                </div>
+
+                <div class="report-summary">
+                    <div class="report-card">
+                        <h4>Ringkasan Periode</h4>
+                        <div class="report-stats">
+                            <div class="report-stat">
+                                <span>Total Pemasukan</span>
+                                <strong id="reportIncome">Rp 0</strong>
+                            </div>
+                            <div class="report-stat">
+                                <span>Total Pengeluaran</span>
+                                <strong id="reportExpense">Rp 0</strong>
+                            </div>
+                            <div class="report-stat">
+                                <span>Selisih</span>
+                                <strong id="reportDiff">Rp 0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-details">
+                    <div class="report-chart">
+                        <h4>Grafik Pengeluaran per Kategori</h4>
+                        <canvas id="reportPieChart"></canvas>
+                    </div>
+                    <div class="report-breakdown">
+                        <h4>Rincian per Kategori</h4>
+                        <div id="categoryBreakdown"></div>
+                    </div>
+                </div>
+
+                <div class="export-section">
+                    <button class="btn btn-secondary" id="exportCSV">Export CSV</button>
+                </div>
+
+                <!-- ANALISIS & SARAN -->
+                <div class="analysis-section">
+                    <h3>Analisis & Saran Keuangan</h3>
+
+                    <div class="analysis-cards">
+                        <!-- Skor Kesehatan Keuangan -->
+                        <div class="analysis-card health-score">
+                            <h4>Skor Kesehatan Keuangan</h4>
+                            <div class="score-circle">
+                                <span id="healthScore">0</span>
+                                <small>/100</small>
+                            </div>
+                            <p id="healthStatus" class="health-status">-</p>
+                        </div>
+
+                        <!-- Ringkasan Analisis -->
+                        <div class="analysis-card summary">
+                            <h4>Ringkasan</h4>
+                            <div class="analysis-stats">
+                                <div class="analysis-stat">
+                                    <span>Rasio Tabungan</span>
+                                    <strong id="savingRatio">0%</strong>
+                                </div>
+                                <div class="analysis-stat">
+                                    <span>Rasio Pengeluaran</span>
+                                    <strong id="expenseRatio">0%</strong>
+                                </div>
+                                <div class="analysis-stat">
+                                    <span>Sisa Budget</span>
+                                    <strong id="budgetRemaining">Rp 0</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Analisis per Kategori -->
+                    <div class="category-analysis">
+                        <h4>Analisis per Kategori</h4>
+                        <div id="categoryAnalysis"></div>
+                    </div>
+
+                    <!-- Saran Keuangan -->
+                    <div class="suggestions-section">
+                        <h4>Saran & Rekomendasi</h4>
+                        <div id="financialSuggestions"></div>
+                    </div>
+
+                    <!-- Tips Keuangan -->
+                    <div class="tips-section">
+                        <h4>Tips Keuangan</h4>
+                        <div id="financialTips"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PENGATURAN -->
+            <section id="pengaturanSection" class="content-section" style="display:none;">
+                <h2>Pengaturan Akun</h2>
+
+                <div class="settings-container">
+                    <div class="setting-card">
+                        <h3>Ubah Password</h3>
+                        <form id="changePasswordForm">
+                            <div class="form-group">
+                                <label>Password Lama</label>
+                                <input type="password" id="oldPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password Baru</label>
+                                <input type="password" id="newPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Konfirmasi Password Baru</label>
+                                <input type="password" id="confirmNewPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Ubah Password</button>
+                        </form>
+                    </div>
+
+                    <div class="setting-card danger">
+                        <h3>Data & Backup</h3>
+                        <p>Export semua data keuangan kamu</p>
+                        <button class="btn btn-secondary" id="exportData">Export Data (JSON)</button>
+                        <hr>
+                        <p>Import data dari backup</p>
+                        <input type="file" id="importFile" accept=".json">
+                        <button class="btn btn-secondary" id="importData">Import Data</button>
+                        <hr>
+                        <p class="warning-text">Hapus semua data (tidak bisa dikembalikan!)</p>
+                        <button class="btn btn-danger" id="clearData">Hapus Semua Data</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
