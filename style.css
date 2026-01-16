@@ -463,6 +463,16 @@ body {
     font-size: 28px;
     font-weight: 800;
     line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.summary-value .currency {
+    font-size: 16px;
+    font-weight: 600;
+    opacity: 0.8;
 }
 
 .income-card .summary-value { color: var(--success); }
@@ -610,10 +620,20 @@ body {
 }
 
 .budget-item-stats .stat-value {
-    display: block;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
     font-size: 13px;
     font-weight: 700;
     color: var(--text-dark);
+    font-variant-numeric: tabular-nums;
+}
+
+.budget-item-stats .stat-value .currency {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.7;
 }
 
 .budget-item-stats .stat-value.expense { color: var(--danger); }

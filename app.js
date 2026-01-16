@@ -12,6 +12,11 @@ function formatRupiah(num) {
     return 'Rp ' + num.toLocaleString('id-ID');
 }
 
+// Format Rupiah with separate currency for better alignment
+function formatRupiahHTML(num) {
+    return `<span class="currency">Rp</span>${num.toLocaleString('id-ID')}`;
+}
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     toast.textContent = message;
@@ -314,38 +319,38 @@ function updateDashboard() {
     const amounts = calculateBudgetAmounts(budget);
     const summary = getTransactionsSummary(month);
 
-    // Update stats
-    document.getElementById('totalIncome').textContent = formatRupiah(summary.totalIncome);
-    document.getElementById('totalExpense').textContent = formatRupiah(summary.totalExpense);
-    document.getElementById('totalBalance').textContent = formatRupiah(summary.totalIncome - summary.totalExpense);
+    // Update stats with HTML format for alignment
+    document.getElementById('totalIncome').innerHTML = formatRupiahHTML(summary.totalIncome);
+    document.getElementById('totalExpense').innerHTML = formatRupiahHTML(summary.totalExpense);
+    document.getElementById('totalBalance').innerHTML = formatRupiahHTML(summary.totalIncome - summary.totalExpense);
 
     // Update budget cards - Living
-    document.getElementById('livingBudget').textContent = formatRupiah(amounts.living);
-    document.getElementById('livingUsed').textContent = formatRupiah(summary.livingExpense);
-    document.getElementById('livingRemain').textContent = formatRupiah(Math.max(0, amounts.living - summary.livingExpense));
+    document.getElementById('livingBudget').innerHTML = formatRupiahHTML(amounts.living);
+    document.getElementById('livingUsed').innerHTML = formatRupiahHTML(summary.livingExpense);
+    document.getElementById('livingRemain').innerHTML = formatRupiahHTML(Math.max(0, amounts.living - summary.livingExpense));
     const livingPercent = amounts.living > 0 ? Math.min(100, (summary.livingExpense / amounts.living) * 100) : 0;
     document.getElementById('livingProgress').style.width = `${livingPercent}%`;
     if (livingPercent > 100) document.getElementById('livingProgress').style.background = '#EF4444';
 
     // Update budget cards - Saving
-    document.getElementById('savingBudget').textContent = formatRupiah(amounts.saving);
-    document.getElementById('savingUsed').textContent = formatRupiah(summary.savingIncome);
-    document.getElementById('savingRemain').textContent = formatRupiah(Math.max(0, amounts.saving - summary.savingIncome));
+    document.getElementById('savingBudget').innerHTML = formatRupiahHTML(amounts.saving);
+    document.getElementById('savingUsed').innerHTML = formatRupiahHTML(summary.savingIncome);
+    document.getElementById('savingRemain').innerHTML = formatRupiahHTML(Math.max(0, amounts.saving - summary.savingIncome));
     const savingPercent = amounts.saving > 0 ? Math.min(100, (summary.savingIncome / amounts.saving) * 100) : 0;
     document.getElementById('savingProgress').style.width = `${savingPercent}%`;
 
     // Update budget cards - Playing
-    document.getElementById('playingBudget').textContent = formatRupiah(amounts.playing);
-    document.getElementById('playingUsed').textContent = formatRupiah(summary.playingExpense);
-    document.getElementById('playingRemain').textContent = formatRupiah(Math.max(0, amounts.playing - summary.playingExpense));
+    document.getElementById('playingBudget').innerHTML = formatRupiahHTML(amounts.playing);
+    document.getElementById('playingUsed').innerHTML = formatRupiahHTML(summary.playingExpense);
+    document.getElementById('playingRemain').innerHTML = formatRupiahHTML(Math.max(0, amounts.playing - summary.playingExpense));
     const playingPercent = amounts.playing > 0 ? Math.min(100, (summary.playingExpense / amounts.playing) * 100) : 0;
     document.getElementById('playingProgress').style.width = `${playingPercent}%`;
     if (playingPercent > 100) document.getElementById('playingProgress').style.background = '#EF4444';
 
     // Update budget cards - Emergency
-    document.getElementById('emergencyBudget').textContent = formatRupiah(amounts.emergency);
-    document.getElementById('emergencyUsed').textContent = formatRupiah(summary.emergencyExpense);
-    document.getElementById('emergencyRemain').textContent = formatRupiah(Math.max(0, amounts.emergency - summary.emergencyExpense));
+    document.getElementById('emergencyBudget').innerHTML = formatRupiahHTML(amounts.emergency);
+    document.getElementById('emergencyUsed').innerHTML = formatRupiahHTML(summary.emergencyExpense);
+    document.getElementById('emergencyRemain').innerHTML = formatRupiahHTML(Math.max(0, amounts.emergency - summary.emergencyExpense));
     const emergencyPercent = amounts.emergency > 0 ? Math.min(100, (summary.emergencyExpense / amounts.emergency) * 100) : 0;
     document.getElementById('emergencyProgress').style.width = `${emergencyPercent}%`;
 
