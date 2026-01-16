@@ -87,98 +87,223 @@
         <main class="main-content">
             <!-- DASHBOARD -->
             <section id="dashboardSection" class="content-section">
-                <h2>Financial Dashboard</h2>
-                <div class="month-selector">
-                    <label>Month:</label>
-                    <input type="month" id="dashboardMonth">
+                <!-- Dashboard Header -->
+                <div class="dashboard-header">
+                    <div class="dashboard-title">
+                        <h2>Dashboard</h2>
+                        <p class="dashboard-subtitle">Monitor your financial health</p>
+                    </div>
+                    <div class="period-selector">
+                        <select id="dashboardMonthSelect" onchange="updateDashboardMonth()">
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <select id="dashboardYear" onchange="updateDashboardMonth()">
+                        </select>
+                        <input type="hidden" id="dashboardMonth">
+                    </div>
                 </div>
 
-                <div class="quick-actions">
-                    <button class="btn btn-success" onclick="showQuickIncome()">+ Add Income</button>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card income">
-                        <h3>Total Income</h3>
-                        <p id="totalIncome">Rp 0</p>
-                        <small>This month</small>
-                    </div>
-                    <div class="stat-card expense">
-                        <h3>Total Expense</h3>
-                        <p id="totalExpense">Rp 0</p>
-                        <small>This month</small>
-                    </div>
-                    <div class="stat-card balance">
-                        <h3>Balance</h3>
-                        <p id="totalBalance">Rp 0</p>
-                        <small>This month</small>
-                    </div>
-                </div>
-
-                <div class="budget-overview">
-                    <h3>Budget Status This Month</h3>
-                    <div class="budget-cards">
-                        <div class="budget-card living">
-                            <h4>🏠 Living</h4>
-                            <div class="budget-info">
-                                <span>Budget: <strong id="livingBudget">Rp 0</strong></span>
-                                <span>Used: <strong id="livingUsed">Rp 0</strong></span>
-                                <span>Remaining: <strong id="livingRemain">Rp 0</strong></span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress" id="livingProgress"></div>
-                            </div>
+                <!-- Financial Summary Cards -->
+                <div class="summary-cards">
+                    <div class="summary-card income-card">
+                        <div class="summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
                         </div>
-                        <div class="budget-card saving">
-                            <h4>💎 Saving</h4>
-                            <div class="budget-info">
-                                <span>Target: <strong id="savingBudget">Rp 0</strong></span>
-                                <span>Saved: <strong id="savingUsed">Rp 0</strong></span>
-                                <span>Remaining: <strong id="savingRemain">Rp 0</strong></span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress saving-progress" id="savingProgress"></div>
-                            </div>
+                        <div class="summary-content">
+                            <span class="summary-label">Total Income</span>
+                            <span class="summary-value" id="totalIncome">Rp 0</span>
+                            <span class="summary-period">This month</span>
                         </div>
-                        <div class="budget-card playing">
-                            <h4>🎮 Playing</h4>
-                            <div class="budget-info">
-                                <span>Budget: <strong id="playingBudget">Rp 0</strong></span>
-                                <span>Used: <strong id="playingUsed">Rp 0</strong></span>
-                                <span>Remaining: <strong id="playingRemain">Rp 0</strong></span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress playing-progress" id="playingProgress"></div>
-                            </div>
+                    </div>
+                    <div class="summary-card expense-card">
+                        <div class="summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3h18v18H3zM21 9H3M9 21V9"/>
+                            </svg>
                         </div>
-                        <div class="budget-card emergency">
-                            <h4>🚨 Emergency</h4>
-                            <div class="budget-info">
-                                <span>Budget: <strong id="emergencyBudget">Rp 0</strong></span>
-                                <span>Used: <strong id="emergencyUsed">Rp 0</strong></span>
-                                <span>Remaining: <strong id="emergencyRemain">Rp 0</strong></span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress emergency-progress" id="emergencyProgress"></div>
-                            </div>
+                        <div class="summary-content">
+                            <span class="summary-label">Total Expense</span>
+                            <span class="summary-value" id="totalExpense">Rp 0</span>
+                            <span class="summary-period">This month</span>
+                        </div>
+                    </div>
+                    <div class="summary-card balance-card">
+                        <div class="summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                <path d="M9 12l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div class="summary-content">
+                            <span class="summary-label">Balance</span>
+                            <span class="summary-value" id="totalBalance">Rp 0</span>
+                            <span class="summary-period">This month</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="charts-container">
-                    <div class="chart-box">
-                        <h3>Expense Distribution</h3>
-                        <canvas id="expenseChart"></canvas>
+                <!-- Budget Status Section -->
+                <div class="budget-section">
+                    <div class="section-header">
+                        <h3>Budget Status</h3>
+                        <span class="section-badge">4 Categories</span>
                     </div>
-                    <div class="chart-box">
-                        <h3>Monthly Trend</h3>
-                        <canvas id="trendChart"></canvas>
+                    <div class="budget-grid">
+                        <!-- Living -->
+                        <div class="budget-item living">
+                            <div class="budget-item-header">
+                                <div class="budget-item-icon">🏠</div>
+                                <div class="budget-item-info">
+                                    <h4>Living</h4>
+                                </div>
+                            </div>
+                            <div class="budget-item-progress">
+                                <div class="progress-track">
+                                    <div class="progress-fill" id="livingProgress"></div>
+                                </div>
+                            </div>
+                            <div class="budget-item-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Budget</span>
+                                    <span class="stat-value" id="livingBudget">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Used</span>
+                                    <span class="stat-value expense" id="livingUsed">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Left</span>
+                                    <span class="stat-value success" id="livingRemain">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Saving -->
+                        <div class="budget-item saving">
+                            <div class="budget-item-header">
+                                <div class="budget-item-icon">💎</div>
+                                <div class="budget-item-info">
+                                    <h4>Saving</h4>
+                                </div>
+                            </div>
+                            <div class="budget-item-progress">
+                                <div class="progress-track">
+                                    <div class="progress-fill saving" id="savingProgress"></div>
+                                </div>
+                            </div>
+                            <div class="budget-item-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Target</span>
+                                    <span class="stat-value" id="savingBudget">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Saved</span>
+                                    <span class="stat-value success" id="savingUsed">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Left</span>
+                                    <span class="stat-value" id="savingRemain">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Playing -->
+                        <div class="budget-item playing">
+                            <div class="budget-item-header">
+                                <div class="budget-item-icon">✈️</div>
+                                <div class="budget-item-info">
+                                    <h4>Playing</h4>
+                                </div>
+                            </div>
+                            <div class="budget-item-progress">
+                                <div class="progress-track">
+                                    <div class="progress-fill playing" id="playingProgress"></div>
+                                </div>
+                            </div>
+                            <div class="budget-item-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Budget</span>
+                                    <span class="stat-value" id="playingBudget">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Used</span>
+                                    <span class="stat-value expense" id="playingUsed">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Left</span>
+                                    <span class="stat-value success" id="playingRemain">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Emergency -->
+                        <div class="budget-item emergency">
+                            <div class="budget-item-header">
+                                <div class="budget-item-icon">🚨</div>
+                                <div class="budget-item-info">
+                                    <h4>Emergency</h4>
+                                </div>
+                            </div>
+                            <div class="budget-item-progress">
+                                <div class="progress-track">
+                                    <div class="progress-fill emergency" id="emergencyProgress"></div>
+                                </div>
+                            </div>
+                            <div class="budget-item-stats">
+                                <div class="stat">
+                                    <span class="stat-label">Budget</span>
+                                    <span class="stat-value" id="emergencyBudget">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Used</span>
+                                    <span class="stat-value expense" id="emergencyUsed">Rp 0</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-label">Left</span>
+                                    <span class="stat-value success" id="emergencyRemain">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="recent-transactions">
-                    <h3>Recent Transactions</h3>
-                    <div id="recentList"></div>
+                <!-- Charts Section -->
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Expense Distribution</h3>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Monthly Trend</h3>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="recent-section">
+                    <div class="section-header">
+                        <h3>Recent Transactions</h3>
+                        <a href="#" onclick="switchPage('transaksi'); return false;" class="view-all-link">View All</a>
+                    </div>
+                    <div class="recent-list" id="recentList"></div>
                 </div>
             </section>
 
@@ -191,7 +316,7 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Type</label>
-                                <select id="txType" required>
+                                <select id="txType" required onchange="updateCategoryOptions()">
                                     <option value="expense">Expense</option>
                                     <option value="income">Income</option>
                                 </select>
@@ -225,7 +350,23 @@
                 </div>
 
                 <div class="transaction-filters">
-                    <input type="month" id="filterMonth">
+                    <select id="filterYear" onchange="updateFilterMonth()">
+                    </select>
+                    <select id="filterMonthSelect" onchange="updateFilterMonth()">
+                        <option value="01">Jan</option>
+                        <option value="02">Feb</option>
+                        <option value="03">Mar</option>
+                        <option value="04">Apr</option>
+                        <option value="05">May</option>
+                        <option value="06">Jun</option>
+                        <option value="07">Jul</option>
+                        <option value="08">Aug</option>
+                        <option value="09">Sep</option>
+                        <option value="10">Oct</option>
+                        <option value="11">Nov</option>
+                        <option value="12">Dec</option>
+                    </select>
+                    <input type="hidden" id="filterMonth">
                     <select id="filterType">
                         <option value="all">All Types</option>
                         <option value="income">Income</option>
@@ -240,7 +381,20 @@
                     </select>
                 </div>
 
-                <div class="transaction-list" id="transactionList"></div>
+                <div class="transaction-table-container">
+                    <table class="transaction-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionList"></tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- TABUNGAN -->
@@ -300,34 +454,46 @@
                         <div class="percentage-item">
                             <label>🏠 Living (Essentials)</label>
                             <div class="percentage-input">
-                                <input type="range" id="livingPercent" min="0" max="100" value="50">
+                                <input type="range" id="livingPercent" min="0" max="100" value="50" disabled>
                                 <span id="livingPercentValue">50%</span>
                             </div>
-                            <p class="amount-preview">= Rp <span id="livingAmount">0</span></p>
+                            <div class="amount-input">
+                                <span>Rp</span>
+                                <input type="number" id="livingAmountInput" class="amount-number" placeholder="0">
+                            </div>
                         </div>
                         <div class="percentage-item">
                             <label>💎 Saving</label>
                             <div class="percentage-input">
-                                <input type="range" id="savingPercent" min="0" max="100" value="30">
+                                <input type="range" id="savingPercent" min="0" max="100" value="30" disabled>
                                 <span id="savingPercentValue">30%</span>
                             </div>
-                            <p class="amount-preview">= Rp <span id="savingAmount">0</span></p>
+                            <div class="amount-input">
+                                <span>Rp</span>
+                                <input type="number" id="savingAmountInput" class="amount-number" placeholder="0">
+                            </div>
                         </div>
                         <div class="percentage-item">
-                            <label>🎮 Playing (Entertainment)</label>
+                            <label>✈️ Playing (Lifestyle & Travel)</label>
                             <div class="percentage-input">
-                                <input type="range" id="playingPercent" min="0" max="100" value="10">
+                                <input type="range" id="playingPercent" min="0" max="100" value="10" disabled>
                                 <span id="playingPercentValue">10%</span>
                             </div>
-                            <p class="amount-preview">= Rp <span id="playingAmount">0</span></p>
+                            <div class="amount-input">
+                                <span>Rp</span>
+                                <input type="number" id="playingAmountInput" class="amount-number" placeholder="0">
+                            </div>
                         </div>
                         <div class="percentage-item emergency-item">
                             <label>🚨 Emergency Fund</label>
                             <div class="percentage-input">
-                                <input type="range" id="emergencyPercent" min="0" max="100" value="10">
+                                <input type="range" id="emergencyPercent" min="0" max="100" value="10" disabled>
                                 <span id="emergencyPercentValue">10%</span>
                             </div>
-                            <p class="amount-preview">= Rp <span id="emergencyAmount">0</span></p>
+                            <div class="amount-input">
+                                <span>Rp</span>
+                                <input type="number" id="emergencyAmountInput" class="amount-number" placeholder="0">
+                            </div>
                         </div>
                     </div>
 
@@ -346,15 +512,27 @@
 
                 <div class="report-filters">
                     <div class="form-group">
-                        <label>Period</label>
-                        <select id="reportPeriod">
-                            <option value="month">Monthly</option>
-                            <option value="year">Yearly</option>
+                        <label>Year</label>
+                        <select id="reportYear" onchange="updateReportMonth()">
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Month/Year</label>
-                        <input type="month" id="reportMonth">
+                        <label>Month</label>
+                        <select id="reportMonthSelect" onchange="updateReportMonth()">
+                            <option value="01">January</option>
+                            <option value="02">February</option>
+                            <option value="03">March</option>
+                            <option value="04">April</option>
+                            <option value="05">May</option>
+                            <option value="06">June</option>
+                            <option value="07">July</option>
+                            <option value="08">August</option>
+                            <option value="09">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <input type="hidden" id="reportMonth">
                     </div>
                     <button class="btn btn-secondary" id="generateReport">Show Report</button>
                 </div>
@@ -490,25 +668,37 @@
         </main>
     </div>
 
-    <!-- MODAL TAMBAH PEMASUKAN -->
-    <div id="incomeModal" class="modal">
+    <!-- MODAL EDIT TRANSACTION -->
+    <div id="editModal" class="modal">
         <div class="modal-content">
-            <span class="modal-close" onclick="closeIncomeModal()">&times;</span>
-            <h3>Add Income</h3>
-            <form id="quickIncomeForm">
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+            <h3>Edit Transaction</h3>
+            <form id="editTransactionForm">
+                <input type="hidden" id="editTxId">
                 <div class="form-group">
-                    <label>Amount (Rp)</label>
-                    <input type="number" id="quickIncomeAmount" placeholder="500000" required>
+                    <label>Type</label>
+                    <select id="editTxType" required onchange="updateEditCategoryOptions()">
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label>Description</label>
-                    <input type="text" id="quickIncomeDesc" placeholder="Example: Bonus, Freelance, THR">
+                    <label>Category</label>
+                    <select id="editTxCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Amount (Rp)</label>
+                    <input type="number" id="editTxAmount" required>
                 </div>
                 <div class="form-group">
                     <label>Date</label>
-                    <input type="date" id="quickIncomeDate" required>
+                    <input type="date" id="editTxDate" required>
                 </div>
-                <button type="submit" class="btn btn-success">Save Income</button>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="editTxDescription">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
         </div>
     </div>

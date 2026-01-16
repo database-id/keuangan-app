@@ -59,10 +59,16 @@ function registerUser(username, password, gaji) {
     };
     setStorage(STORAGE_KEYS.USERS, users);
 
-    // Initialize budget for new user
+    // Initialize budget for new user with amounts
     const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
     budgets[username] = {
         gaji: gaji,
+        // Calculate amounts based on default percentages
+        livingAmt: Math.round(gaji * 50 / 100),
+        savingAmt: Math.round(gaji * 30 / 100),
+        playingAmt: Math.round(gaji * 10 / 100),
+        emergencyAmt: Math.round(gaji * 10 / 100),
+        // Percentages for display
         living: 50,
         saving: 30,
         playing: 10,
@@ -79,7 +85,7 @@ function registerUser(username, password, gaji) {
         category: 'living',
         amount: gaji,
         date: today,
-        description: 'Gaji Bulanan',
+        description: 'Monthly Salary',
         createdAt: new Date().toISOString()
     }];
     setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
@@ -138,6 +144,17 @@ function saveUserBudget(budget) {
 
 function calculateBudgetAmounts(budget) {
     const gaji = budget.gaji;
+
+    // Use saved amounts if available (new format), otherwise calculate from percentages
+    if (budget.livingAmt !== undefined) {
+        return {
+            living: budget.livingAmt,
+            saving: budget.savingAmt,
+            playing: budget.playingAmt,
+            emergency: budget.emergencyAmt
+        };
+    }
+
     return {
         living: Math.round(gaji * budget.living / 100),
         saving: Math.round(gaji * budget.saving / 100),
@@ -223,19 +240,14 @@ function showMainApp() {
     document.getElementById('mainApp').style.display = 'flex';
     document.getElementById('welcomeUser').textContent = `Hello, ${getCurrentUser()}!`;
 
-    // Set default month
-    document.getElementById('dashboardMonth').value = getCurrentMonth();
-    document.getElementById('filterMonth').value = getCurrentMonth();
-    document.getElementById('reportMonth').value = getCurrentMonth();
-    document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+    // Initialize year selectors
+    initYearSelectors();
 
-    // Auto-add monthly salary if not exists for current month
-    ensureMonthlySalary();
+    // Set default date for transaction form
+    document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
 
     // Load initial data
     loadBudgetSettings();
-    updateDashboard();
-    loadTransactionList();
 }
 
 // Ensure salary income exists for current month
@@ -247,7 +259,7 @@ function ensureMonthlySalary() {
     // Check if salary already exists for this month
     const hasSalaryThisMonth = transactions.some(tx =>
         tx.type === 'income' &&
-        tx.description === 'Gaji Bulanan' &&
+        (tx.description === 'Monthly Salary' || tx.description === 'Gaji Bulanan') &&
         tx.date.startsWith(currentMonth)
     );
 
@@ -259,7 +271,7 @@ function ensureMonthlySalary() {
             category: 'living',
             amount: budget.gaji,
             date: today,
-            description: 'Gaji Bulanan',
+            description: 'Monthly Salary',
             createdAt: new Date().toISOString()
         };
         transactions.push(salaryTx);
@@ -311,32 +323,31 @@ function updateDashboard() {
     document.getElementById('livingBudget').textContent = formatRupiah(amounts.living);
     document.getElementById('livingUsed').textContent = formatRupiah(summary.livingExpense);
     document.getElementById('livingRemain').textContent = formatRupiah(Math.max(0, amounts.living - summary.livingExpense));
-    const livingPercent = Math.min(100, (summary.livingExpense / amounts.living) * 100);
+    const livingPercent = amounts.living > 0 ? Math.min(100, (summary.livingExpense / amounts.living) * 100) : 0;
     document.getElementById('livingProgress').style.width = `${livingPercent}%`;
-    document.getElementById('livingProgress').style.background = livingPercent > 100 ? '#EF4444' : '#3B82F6';
+    if (livingPercent > 100) document.getElementById('livingProgress').style.background = '#EF4444';
 
     // Update budget cards - Saving
     document.getElementById('savingBudget').textContent = formatRupiah(amounts.saving);
     document.getElementById('savingUsed').textContent = formatRupiah(summary.savingIncome);
     document.getElementById('savingRemain').textContent = formatRupiah(Math.max(0, amounts.saving - summary.savingIncome));
-    const savingPercent = Math.min(100, (summary.savingIncome / amounts.saving) * 100);
+    const savingPercent = amounts.saving > 0 ? Math.min(100, (summary.savingIncome / amounts.saving) * 100) : 0;
     document.getElementById('savingProgress').style.width = `${savingPercent}%`;
 
     // Update budget cards - Playing
     document.getElementById('playingBudget').textContent = formatRupiah(amounts.playing);
     document.getElementById('playingUsed').textContent = formatRupiah(summary.playingExpense);
     document.getElementById('playingRemain').textContent = formatRupiah(Math.max(0, amounts.playing - summary.playingExpense));
-    const playingPercent = Math.min(100, (summary.playingExpense / amounts.playing) * 100);
+    const playingPercent = amounts.playing > 0 ? Math.min(100, (summary.playingExpense / amounts.playing) * 100) : 0;
     document.getElementById('playingProgress').style.width = `${playingPercent}%`;
-    document.getElementById('playingProgress').style.background = playingPercent > 100 ? '#EF4444' : '#F59E0B';
+    if (playingPercent > 100) document.getElementById('playingProgress').style.background = '#EF4444';
 
     // Update budget cards - Emergency
     document.getElementById('emergencyBudget').textContent = formatRupiah(amounts.emergency);
     document.getElementById('emergencyUsed').textContent = formatRupiah(summary.emergencyExpense);
     document.getElementById('emergencyRemain').textContent = formatRupiah(Math.max(0, amounts.emergency - summary.emergencyExpense));
-    const emergencyPercent = Math.min(100, (summary.emergencyExpense / amounts.emergency) * 100);
+    const emergencyPercent = amounts.emergency > 0 ? Math.min(100, (summary.emergencyExpense / amounts.emergency) * 100) : 0;
     document.getElementById('emergencyProgress').style.width = `${emergencyPercent}%`;
-    document.getElementById('emergencyProgress').style.background = emergencyPercent > 100 ? '#DC2626' : '#EF4444';
 
     // Update charts
     updateExpenseChart(summary);
@@ -370,7 +381,7 @@ function loadTabunganPage() {
 
     // Sort months chronologically
     const months = Object.keys(monthlyData).sort();
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     let totalAccumulated = 0;
     const chartLabels = [];
@@ -410,7 +421,7 @@ function loadTabunganPage() {
         data: {
             labels: chartLabels,
             datasets: [{
-                label: 'Total Tabungan',
+                label: 'Total Savings',
                 data: accumulatedData,
                 borderColor: '#10B981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -446,7 +457,7 @@ function loadTabunganPage() {
         data: {
             labels: chartLabels,
             datasets: [{
-                label: 'Sisa Saldo',
+                label: 'Balance',
                 data: monthlyBalances,
                 backgroundColor: monthlyBalances.map(v => v >= 0 ? '#10B981' : '#EF4444'),
                 borderRadius: 8
@@ -470,7 +481,7 @@ function loadTabunganPage() {
     // Update History Table
     const historyContainer = document.getElementById('savingsHistoryList');
     if (historyItems.length === 0) {
-        historyContainer.innerHTML = '<p class="no-history">Belum ada data transaksi</p>';
+        historyContainer.innerHTML = '<p class="no-history">No transaction data yet</p>';
     } else {
         historyContainer.innerHTML = historyItems.map(item => `
             <div class="history-row">
@@ -493,7 +504,7 @@ function updateExpenseChart(summary) {
     expenseChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Kebutuhan', 'Tabungan', 'Hiburan', 'Darurat'],
+            labels: ['Living', 'Saving', 'Playing', 'Emergency'],
             datasets: [{
                 data: [summary.livingExpense, summary.savingExpense, summary.playingExpense, summary.emergencyExpense],
                 backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
@@ -540,12 +551,12 @@ function updateTrendChart() {
         data: {
             labels: months.map(m => {
                 const [y, mo] = m.split('-');
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                 return monthNames[parseInt(mo) - 1];
             }),
             datasets: [
                 {
-                    label: 'Pemasukan',
+                    label: 'Income',
                     data: incomeData,
                     borderColor: '#10B981',
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -553,7 +564,7 @@ function updateTrendChart() {
                     tension: 0.4
                 },
                 {
-                    label: 'Pengeluaran',
+                    label: 'Expense',
                     data: expenseData,
                     borderColor: '#EF4444',
                     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -589,7 +600,7 @@ function loadRecentTransactions() {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="icon">📝</div>
-                <p>Belum ada transaksi</p>
+                <p>No transactions yet</p>
             </div>
         `;
         return;
@@ -619,37 +630,56 @@ function loadTransactionList() {
 
     if (transactions.length === 0) {
         container.innerHTML = `
-            <div class="empty-state">
-                <div class="icon">📝</div>
-                <p>Tidak ada transaksi</p>
-            </div>
+            <tr>
+                <td colspan="5" class="empty-table">
+                    <div class="empty-state">
+                        <div class="icon">📝</div>
+                        <p>No transactions found</p>
+                    </div>
+                </td>
+            </tr>
         `;
         return;
     }
 
-    container.innerHTML = transactions.map(tx => createTransactionHTML(tx, true)).join('');
+    container.innerHTML = transactions.map(tx => createTransactionTableRow(tx)).join('');
 }
 
 function getCategoryLabel(category) {
     const labels = {
+        // Expense categories
         living: 'Living',
         saving: 'Saving',
         playing: 'Playing',
-        emergency: 'Emergency'
+        emergency: 'Emergency',
+        // Income categories
+        salary: 'Salary',
+        bonus: 'Bonus',
+        thr: 'THR',
+        freelance: 'Freelance',
+        investment: 'Investment',
+        other: 'Other'
     };
     return labels[category] || category;
 }
 
 function createTransactionHTML(tx, showActions = false) {
     const icons = {
+        // Expense icons
         living: '🏠',
         saving: '💎',
-        playing: '🎮',
+        playing: '✈️',
         emergency: '🚨',
-        income: '💵'
+        // Income icons
+        salary: '💰',
+        bonus: '🎁',
+        thr: '🎊',
+        freelance: '💼',
+        investment: '📈',
+        other: '💵'
     };
 
-    const icon = tx.type === 'income' ? icons.income : icons[tx.category];
+    const icon = icons[tx.category] || '💵';
     const iconClass = tx.type === 'income' ? 'income' : tx.category;
     const amountClass = tx.type === 'income' ? 'income' : 'expense';
     const amountPrefix = tx.type === 'income' ? '+' : '-';
@@ -657,7 +687,7 @@ function createTransactionHTML(tx, showActions = false) {
 
     const actionsHTML = showActions ? `
         <div class="tx-actions">
-            <button class="btn-delete" onclick="handleDeleteTransaction(${tx.id})">Hapus</button>
+            <button class="btn-delete" onclick="handleDeleteTransaction(${tx.id})">Delete</button>
         </div>
     ` : '';
 
@@ -684,39 +714,256 @@ function handleDeleteTransaction(id) {
     }
 }
 
+// Create table row for transaction list
+function createTransactionTableRow(tx) {
+    const categoryLabel = getCategoryLabel(tx.category);
+    const amountClass = tx.type === 'income' ? 'income' : 'expense';
+    const amountPrefix = tx.type === 'income' ? '+' : '-';
+
+    return `
+        <tr>
+            <td>${tx.date}</td>
+            <td>${tx.description || categoryLabel}</td>
+            <td><span class="category-badge ${tx.category}">${categoryLabel}</span></td>
+            <td class="amount ${amountClass}">${amountPrefix}${formatRupiah(tx.amount)}</td>
+            <td class="actions">
+                <button class="btn-edit" onclick="openEditModal(${tx.id})">Edit</button>
+                <button class="btn-delete" onclick="handleDeleteTransaction(${tx.id})">Delete</button>
+            </td>
+        </tr>
+    `;
+}
+
+// ==================== EDIT TRANSACTION ====================
+function openEditModal(id) {
+    const transactions = getUserTransactions();
+    const tx = transactions.find(t => t.id === id);
+
+    if (!tx) return;
+
+    document.getElementById('editTxId').value = tx.id;
+    document.getElementById('editTxType').value = tx.type;
+    updateEditCategoryOptions();
+    document.getElementById('editTxCategory').value = tx.category;
+    document.getElementById('editTxAmount').value = tx.amount;
+    document.getElementById('editTxDate').value = tx.date;
+    document.getElementById('editTxDescription').value = tx.description || '';
+
+    document.getElementById('editModal').classList.add('show');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+    document.getElementById('editTransactionForm').reset();
+}
+
+function updateEditCategoryOptions() {
+    const type = document.getElementById('editTxType').value;
+    const categorySelect = document.getElementById('editTxCategory');
+
+    if (type === 'income') {
+        categorySelect.innerHTML = `
+            <option value="salary">Salary</option>
+            <option value="bonus">Bonus</option>
+            <option value="thr">THR</option>
+            <option value="freelance">Freelance</option>
+            <option value="investment">Investment</option>
+            <option value="other">Other</option>
+        `;
+    } else {
+        categorySelect.innerHTML = `
+            <option value="living">Living</option>
+            <option value="saving">Saving</option>
+            <option value="playing">Playing</option>
+            <option value="emergency">Emergency</option>
+        `;
+    }
+}
+
+function saveEditedTransaction(e) {
+    e.preventDefault();
+
+    const id = parseInt(document.getElementById('editTxId').value);
+    const transactions = getUserTransactions();
+    const index = transactions.findIndex(t => t.id === id);
+
+    if (index === -1) return;
+
+    transactions[index] = {
+        ...transactions[index],
+        type: document.getElementById('editTxType').value,
+        category: document.getElementById('editTxCategory').value,
+        amount: parseInt(document.getElementById('editTxAmount').value),
+        date: document.getElementById('editTxDate').value,
+        description: document.getElementById('editTxDescription').value
+    };
+
+    saveUserTransactions(transactions);
+    closeEditModal();
+    loadTransactionList();
+    updateDashboard();
+    showToast('Transaction updated successfully!');
+}
+
 // ==================== BUDGET SETTINGS ====================
 function loadBudgetSettings() {
     const budget = getUserBudget();
+    const gaji = budget.gaji || 0;
 
-    document.getElementById('gajiInput').value = budget.gaji;
-    document.getElementById('livingPercent').value = budget.living;
-    document.getElementById('savingPercent').value = budget.saving;
-    document.getElementById('playingPercent').value = budget.playing;
-    document.getElementById('emergencyPercent').value = budget.emergency || 10;
+    document.getElementById('gajiInput').value = gaji;
 
-    updateBudgetDisplay();
+    // Check if amounts are saved (new format) or use percentages (old format)
+    if (budget.livingAmt !== undefined) {
+        // Load EXACT saved amounts - these won't change!
+        document.getElementById('livingAmountInput').value = budget.livingAmt;
+        document.getElementById('savingAmountInput').value = budget.savingAmt;
+        document.getElementById('playingAmountInput').value = budget.playingAmt;
+        document.getElementById('emergencyAmountInput').value = budget.emergencyAmt;
+
+        // Calculate percentages for display only (sliders are disabled)
+        const livingPct = gaji > 0 ? Math.round((budget.livingAmt / gaji) * 100) : 0;
+        const savingPct = gaji > 0 ? Math.round((budget.savingAmt / gaji) * 100) : 0;
+        const playingPct = gaji > 0 ? Math.round((budget.playingAmt / gaji) * 100) : 0;
+        const emergencyPct = gaji > 0 ? Math.round((budget.emergencyAmt / gaji) * 100) : 0;
+
+        document.getElementById('livingPercent').value = livingPct;
+        document.getElementById('savingPercent').value = savingPct;
+        document.getElementById('playingPercent').value = playingPct;
+        document.getElementById('emergencyPercent').value = emergencyPct;
+
+        document.getElementById('livingPercentValue').textContent = `${livingPct}%`;
+        document.getElementById('savingPercentValue').textContent = `${savingPct}%`;
+        document.getElementById('playingPercentValue').textContent = `${playingPct}%`;
+        document.getElementById('emergencyPercentValue').textContent = `${emergencyPct}%`;
+
+        // Calculate total from actual saved amounts
+        const totalAmt = budget.livingAmt + budget.savingAmt + budget.playingAmt + budget.emergencyAmt;
+        const totalPct = gaji > 0 ? Math.round((totalAmt / gaji) * 100) : 0;
+        document.getElementById('totalPercent').textContent = `${totalPct}%`;
+        document.getElementById('percentWarning').style.display = totalPct !== 100 ? 'inline' : 'none';
+    } else {
+        // Load from percentages (old format) - one time conversion
+        const living = budget.living || 50;
+        const saving = budget.saving || 30;
+        const playing = budget.playing || 10;
+        const emergency = budget.emergency || 10;
+
+        document.getElementById('livingPercent').value = living;
+        document.getElementById('savingPercent').value = saving;
+        document.getElementById('playingPercent').value = playing;
+        document.getElementById('emergencyPercent').value = emergency;
+
+        document.getElementById('livingPercentValue').textContent = `${living}%`;
+        document.getElementById('savingPercentValue').textContent = `${saving}%`;
+        document.getElementById('playingPercentValue').textContent = `${playing}%`;
+        document.getElementById('emergencyPercentValue').textContent = `${emergency}%`;
+
+        document.getElementById('livingAmountInput').value = Math.round(gaji * living / 100);
+        document.getElementById('savingAmountInput').value = Math.round(gaji * saving / 100);
+        document.getElementById('playingAmountInput').value = Math.round(gaji * playing / 100);
+        document.getElementById('emergencyAmountInput').value = Math.round(gaji * emergency / 100);
+
+        const total = living + saving + playing + emergency;
+        document.getElementById('totalPercent').textContent = `${total}%`;
+        document.getElementById('percentWarning').style.display = total !== 100 ? 'inline' : 'none';
+    }
 }
 
-function updateBudgetDisplay() {
+function updateBudgetDisplay(autoSave = true, fromSlider = true) {
     const gaji = parseInt(document.getElementById('gajiInput').value) || 0;
-    const living = parseInt(document.getElementById('livingPercent').value);
-    const saving = parseInt(document.getElementById('savingPercent').value);
-    const playing = parseInt(document.getElementById('playingPercent').value);
-    const emergency = parseInt(document.getElementById('emergencyPercent').value);
+    const living = parseInt(document.getElementById('livingPercent').value) || 0;
+    const saving = parseInt(document.getElementById('savingPercent').value) || 0;
+    const playing = parseInt(document.getElementById('playingPercent').value) || 0;
+    const emergency = parseInt(document.getElementById('emergencyPercent').value) || 0;
 
+    // Update percentage displays
     document.getElementById('livingPercentValue').textContent = `${living}%`;
     document.getElementById('savingPercentValue').textContent = `${saving}%`;
     document.getElementById('playingPercentValue').textContent = `${playing}%`;
     document.getElementById('emergencyPercentValue').textContent = `${emergency}%`;
 
-    document.getElementById('livingAmount').textContent = Math.round(gaji * living / 100).toLocaleString('id-ID');
-    document.getElementById('savingAmount').textContent = Math.round(gaji * saving / 100).toLocaleString('id-ID');
-    document.getElementById('playingAmount').textContent = Math.round(gaji * playing / 100).toLocaleString('id-ID');
-    document.getElementById('emergencyAmount').textContent = Math.round(gaji * emergency / 100).toLocaleString('id-ID');
+    // Only update amount inputs if change came from slider (not from amount input)
+    if (fromSlider) {
+        const livingAmt = Math.round(gaji * living / 100);
+        const savingAmt = Math.round(gaji * saving / 100);
+        const playingAmt = Math.round(gaji * playing / 100);
+        const emergencyAmt = Math.round(gaji * emergency / 100);
+
+        document.getElementById('livingAmountInput').value = livingAmt;
+        document.getElementById('savingAmountInput').value = savingAmt;
+        document.getElementById('playingAmountInput').value = playingAmt;
+        document.getElementById('emergencyAmountInput').value = emergencyAmt;
+
+        // Auto-save with calculated amounts
+        if (autoSave && gaji > 0) {
+            const budget = {
+                gaji,
+                livingAmt,
+                savingAmt,
+                playingAmt,
+                emergencyAmt,
+                living,
+                saving,
+                playing,
+                emergency
+            };
+            saveUserBudget(budget);
+        }
+    }
 
     const total = living + saving + playing + emergency;
     document.getElementById('totalPercent').textContent = `${total}%`;
     document.getElementById('percentWarning').style.display = total !== 100 ? 'inline' : 'none';
+}
+
+
+// Update total percentage and save budget
+function updateTotalAndSave() {
+    const gaji = parseInt(document.getElementById('gajiInput').value) || 0;
+
+    const livingAmt = parseInt(document.getElementById('livingAmountInput').value) || 0;
+    const savingAmt = parseInt(document.getElementById('savingAmountInput').value) || 0;
+    const playingAmt = parseInt(document.getElementById('playingAmountInput').value) || 0;
+    const emergencyAmt = parseInt(document.getElementById('emergencyAmountInput').value) || 0;
+
+    const totalAmt = livingAmt + savingAmt + playingAmt + emergencyAmt;
+    const totalPct = gaji > 0 ? Math.round((totalAmt / gaji) * 100) : 0;
+
+    document.getElementById('totalPercent').textContent = `${totalPct}%`;
+    document.getElementById('percentWarning').style.display = totalPct !== 100 ? 'inline' : 'none';
+
+    // Save budget
+    if (gaji > 0) {
+        const budget = {
+            gaji,
+            livingAmt,
+            savingAmt,
+            playingAmt,
+            emergencyAmt,
+            living: parseInt(document.getElementById('livingPercent').value) || 0,
+            saving: parseInt(document.getElementById('savingPercent').value) || 0,
+            playing: parseInt(document.getElementById('playingPercent').value) || 0,
+            emergency: parseInt(document.getElementById('emergencyPercent').value) || 0
+        };
+        saveUserBudget(budget);
+    }
+}
+
+// Sync amount input to slider (calculate percentage from amount)
+function syncPercentFromAmount(category) {
+    const gaji = parseInt(document.getElementById('gajiInput').value) || 0;
+    if (gaji <= 0) return;
+
+    // Get this category's amount and calculate percentage
+    const amount = parseInt(document.getElementById(`${category}AmountInput`).value) || 0;
+    const percent = Math.round((amount / gaji) * 100);
+
+    // Update only this category's slider and percentage display
+    document.getElementById(`${category}Percent`).value = percent;
+    document.getElementById(`${category}PercentValue`).textContent = `${percent}%`;
+
+    // Update total and save
+    updateTotalAndSave();
 }
 
 // ==================== REPORTS ====================
@@ -740,7 +987,7 @@ function generateReport() {
     reportPieChart = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: ['Kebutuhan', 'Tabungan', 'Hiburan', 'Darurat'],
+            labels: ['Living', 'Saving', 'Playing', 'Emergency'],
             datasets: [{
                 data: [summary.livingExpense, summary.savingExpense, summary.playingExpense, summary.emergencyExpense],
                 backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
@@ -758,19 +1005,19 @@ function generateReport() {
     const breakdown = document.getElementById('categoryBreakdown');
     breakdown.innerHTML = `
         <div class="breakdown-item">
-            <span>🏠 Kebutuhan</span>
+            <span>🏠 Living</span>
             <strong>${formatRupiah(summary.livingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>💎 Tabungan</span>
+            <span>💎 Saving</span>
             <strong>${formatRupiah(summary.savingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>🎮 Hiburan</span>
+            <span>✈️ Playing</span>
             <strong>${formatRupiah(summary.playingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>🚨 Darurat</span>
+            <span>🚨 Emergency</span>
             <strong>${formatRupiah(summary.emergencyExpense)}</strong>
         </div>
     `;
@@ -865,10 +1112,10 @@ function calculateHealthScore(summary, budget, amounts) {
 
     // Determine status
     let status;
-    if (score >= 80) status = 'Sangat Baik! 🌟';
-    else if (score >= 60) status = 'Baik 👍';
-    else if (score >= 40) status = 'Perlu Perhatian ⚠️';
-    else status = 'Perlu Perbaikan 🚨';
+    if (score >= 80) status = 'Excellent! 🌟';
+    else if (score >= 60) status = 'Good 👍';
+    else if (score >= 40) status = 'Needs Attention ⚠️';
+    else status = 'Needs Improvement 🚨';
 
     return { score, status, issues };
 }
@@ -877,36 +1124,36 @@ function generateCategoryAnalysis(summary, amounts) {
     const categories = [
         {
             key: 'living',
-            name: 'Kebutuhan',
+            name: 'Living',
             icon: '🏠',
             budget: amounts.living,
             used: summary.livingExpense,
-            desc: 'Kebutuhan Pokok'
+            desc: 'Essential Needs'
         },
         {
             key: 'saving',
-            name: 'Tabungan',
+            name: 'Saving',
             icon: '💎',
             budget: amounts.saving,
             used: summary.savingIncome,
-            desc: 'Tabungan',
+            desc: 'Savings',
             isIncome: true
         },
         {
             key: 'playing',
-            name: 'Hiburan',
-            icon: '🎮',
+            name: 'Playing',
+            icon: '✈️',
             budget: amounts.playing,
             used: summary.playingExpense,
-            desc: 'Hiburan'
+            desc: 'Lifestyle & Travel'
         },
         {
             key: 'emergency',
-            name: 'Darurat',
+            name: 'Emergency',
             icon: '🚨',
             budget: amounts.emergency,
             used: summary.emergencyExpense,
-            desc: 'Dana Darurat'
+            desc: 'Emergency Fund'
         }
     ];
 
@@ -919,25 +1166,25 @@ function generateCategoryAnalysis(summary, amounts) {
             // For saving, higher is better
             if (percentage >= 100) {
                 statusClass = 'good';
-                statusText = 'Target Tercapai!';
+                statusText = 'Target Reached!';
             } else if (percentage >= 50) {
                 statusClass = 'warning';
-                statusText = `${percentage.toFixed(0)}% dari target`;
+                statusText = `${percentage.toFixed(0)}% of target`;
             } else {
                 statusClass = 'danger';
-                statusText = `Baru ${percentage.toFixed(0)}%`;
+                statusText = `Only ${percentage.toFixed(0)}%`;
             }
         } else {
             // For expenses, lower is better
             if (percentage <= 80) {
                 statusClass = 'good';
-                statusText = 'Aman';
+                statusText = 'Safe';
             } else if (percentage <= 100) {
                 statusClass = 'warning';
-                statusText = `${percentage.toFixed(0)}% terpakai`;
+                statusText = `${percentage.toFixed(0)}% used`;
             } else {
                 statusClass = 'danger';
-                statusText = `Melebihi ${(percentage - 100).toFixed(0)}%!`;
+                statusText = `Over ${(percentage - 100).toFixed(0)}%!`;
             }
         }
 
@@ -947,7 +1194,7 @@ function generateCategoryAnalysis(summary, amounts) {
                     <div class="category-icon ${cat.key}">${cat.icon}</div>
                     <div class="category-details">
                         <h5>${cat.name}</h5>
-                        <p>${cat.desc} • Anggaran: ${formatRupiah(cat.budget)}</p>
+                        <p>${cat.desc} • Budget: ${formatRupiah(cat.budget)}</p>
                     </div>
                 </div>
                 <div class="category-status">
@@ -963,86 +1210,86 @@ function generateSuggestions(summary, budget, amounts) {
     const suggestions = [];
     const totalIncome = summary.totalIncome || budget.gaji;
 
-    // 1. Cek defisit
+    // 1. Check deficit
     if (summary.totalExpense > totalIncome) {
         suggestions.push({
             type: 'danger',
             icon: '🚨',
-            title: 'Pengeluaran Melebihi Pemasukan!',
-            text: `Kamu mengalami defisit sebesar ${formatRupiah(summary.totalExpense - totalIncome)}. Segera evaluasi pengeluaran dan kurangi yang tidak perlu.`
+            title: 'Expenses Exceed Income!',
+            text: `You have a deficit of ${formatRupiah(summary.totalExpense - totalIncome)}. Review your expenses and cut unnecessary spending.`
         });
     }
 
-    // 2. Cek Living expense
+    // 2. Check Living expense
     if (summary.livingExpense > amounts.living) {
         const over = summary.livingExpense - amounts.living;
         suggestions.push({
             type: 'warning',
             icon: '🏠',
-            title: 'Anggaran Kebutuhan Terlampaui',
-            text: `Pengeluaran kebutuhan pokok melebihi anggaran ${formatRupiah(over)}. Coba catat detail pengeluaran dan cari yang bisa dikurangi.`
+            title: 'Living Budget Exceeded',
+            text: `Living expenses exceeded budget by ${formatRupiah(over)}. Try to track spending details and find areas to reduce.`
         });
     } else if (summary.livingExpense < amounts.living * 0.5 && summary.livingExpense > 0) {
         suggestions.push({
             type: 'success',
             icon: '✨',
-            title: 'Hemat di Kebutuhan Pokok',
-            text: `Bagus! Kamu hanya menggunakan ${((summary.livingExpense / amounts.living) * 100).toFixed(0)}% anggaran kebutuhan. Sisa bisa dialokasikan ke tabungan.`
+            title: 'Saving on Living Expenses',
+            text: `Great! You only used ${((summary.livingExpense / amounts.living) * 100).toFixed(0)}% of your living budget. The remainder can go to savings.`
         });
     }
 
-    // 3. Cek Playing expense
+    // 3. Check Playing expense
     if (summary.playingExpense > amounts.playing) {
         suggestions.push({
             type: 'warning',
-            icon: '🎮',
-            title: 'Anggaran Hiburan Terlampaui',
-            text: `Pengeluaran hiburan melebihi anggaran. Coba batasi pengeluaran untuk hiburan dan fokus pada kebutuhan pokok.`
+            icon: '✈️',
+            title: 'Lifestyle Budget Exceeded',
+            text: `Lifestyle & travel expenses exceeded budget. Try to limit leisure spending and focus on essentials.`
         });
     }
 
-    // 4. Cek Saving
+    // 4. Check Saving
     if (summary.savingIncome === 0 && totalIncome > 0) {
         suggestions.push({
             type: 'danger',
             icon: '💎',
-            title: 'Belum Ada Tabungan Bulan Ini',
-            text: `Kamu belum menabung bulan ini. Target tabungan: ${formatRupiah(amounts.saving)}. Sisihkan minimal 10-20% dari penghasilan.`
+            title: 'No Savings This Month',
+            text: `You haven't saved anything this month. Savings target: ${formatRupiah(amounts.saving)}. Try to set aside at least 10-20% of income.`
         });
     } else if (summary.savingIncome < amounts.saving && summary.savingIncome > 0) {
-        const kurang = amounts.saving - summary.savingIncome;
+        const remaining = amounts.saving - summary.savingIncome;
         suggestions.push({
             type: 'warning',
             icon: '💎',
-            title: 'Tabungan Belum Mencapai Target',
-            text: `Kamu sudah menabung ${formatRupiah(summary.savingIncome)}, tapi masih kurang ${formatRupiah(kurang)} dari target.`
+            title: 'Savings Below Target',
+            text: `You saved ${formatRupiah(summary.savingIncome)}, but still ${formatRupiah(remaining)} short of the target.`
         });
     } else if (summary.savingIncome >= amounts.saving) {
         suggestions.push({
             type: 'success',
             icon: '🎉',
-            title: 'Target Tabungan Tercapai!',
-            text: `Selamat! Kamu sudah menabung ${formatRupiah(summary.savingIncome)} bulan ini. Pertahankan kebiasaan baik ini!`
+            title: 'Savings Target Reached!',
+            text: `Congratulations! You saved ${formatRupiah(summary.savingIncome)} this month. Keep up the good habit!`
         });
     }
 
-    // 5. Cek Emergency usage
+    // 5. Check Emergency usage
     if (summary.emergencyExpense > 0) {
         suggestions.push({
             type: 'warning',
             icon: '🚨',
-            title: 'Dana Darurat Terpakai',
-            text: `Kamu menggunakan ${formatRupiah(summary.emergencyExpense)} dari dana darurat. Pastikan untuk mengisi kembali dana darurat bulan depan.`
+            title: 'Emergency Fund Used',
+            text: `You used ${formatRupiah(summary.emergencyExpense)} from emergency fund. Make sure to replenish it next month.`
         });
     }
 
-    // 6. Jika tidak ada masalah
+    // 6. If no issues
     if (suggestions.length === 0) {
         suggestions.push({
             type: 'success',
             icon: '🌟',
-            title: 'Keuangan Kamu Sehat!',
-            text: 'Tidak ada masalah yang perlu diperhatikan. Terus pertahankan pengelolaan keuangan yang baik!'
+            title: 'Your Finances are Healthy!',
+            text: 'No issues to address. Keep up the good financial management!'
         });
     }
 
@@ -1062,23 +1309,23 @@ function generateTips(summary, budget) {
     const tips = [
         {
             icon: '💡',
-            text: 'Gunakan metode 50/30/10/10: 50% kebutuhan, 30% tabungan, 10% hiburan, 10% darurat.'
+            text: 'Use the 50/30/10/10 method: 50% living, 30% saving, 10% lifestyle, 10% emergency.'
         },
         {
             icon: '📝',
-            text: 'Catat setiap pengeluaran, sekecil apapun. Ini membantu mengetahui kemana uang pergi.'
+            text: 'Track every expense, no matter how small. This helps you understand where your money goes.'
         },
         {
             icon: '🎯',
-            text: 'Tetapkan tujuan tabungan spesifik (misal: dana darurat 6x pengeluaran bulanan).'
+            text: 'Set specific savings goals (e.g., emergency fund = 6x monthly expenses).'
         },
         {
             icon: '🛒',
-            text: 'Buat daftar belanja sebelum ke toko dan patuhi daftar tersebut.'
+            text: 'Make a shopping list before going to the store and stick to it.'
         },
         {
             icon: '📅',
-            text: 'Review keuangan setiap minggu untuk tetap sesuai anggaran.'
+            text: 'Review your finances weekly to stay on budget.'
         }
     ];
 
@@ -1086,14 +1333,14 @@ function generateTips(summary, budget) {
     if (summary.playingExpense > summary.savingIncome) {
         tips.unshift({
             icon: '⚠️',
-            text: 'Pengeluaran hiburan lebih besar dari tabungan. Coba tukar prioritasnya!'
+            text: 'Lifestyle spending is higher than savings. Try to swap priorities!'
         });
     }
 
     if (summary.emergencyExpense > 0) {
         tips.unshift({
             icon: '🔄',
-            text: 'Setelah menggunakan dana darurat, prioritaskan untuk mengisinya kembali.'
+            text: 'After using emergency funds, prioritize replenishing them.'
         });
     }
 
@@ -1172,7 +1419,18 @@ function clearAllData() {
         const username = getCurrentUser();
 
         const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
-        budgets[username] = { gaji: 6000000, living: 50, saving: 30, playing: 10, emergency: 10 };
+        // Reset with both amounts AND percentages to prevent conversion issues
+        budgets[username] = {
+            gaji: 6000000,
+            livingAmt: 3000000,
+            savingAmt: 1800000,
+            playingAmt: 600000,
+            emergencyAmt: 600000,
+            living: 50,
+            saving: 30,
+            playing: 10,
+            emergency: 10
+        };
         setStorage(STORAGE_KEYS.BUDGET, budgets);
 
         const transactions = getStorage(STORAGE_KEYS.TRANSACTIONS) || {};
@@ -1257,9 +1515,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Dashboard month change
-    document.getElementById('dashboardMonth').addEventListener('change', updateDashboard);
-
     // Transaction form
     document.getElementById('transactionForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -1278,45 +1533,72 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Transaction filters
-    document.getElementById('filterMonth').addEventListener('change', loadTransactionList);
     document.getElementById('filterType').addEventListener('change', loadTransactionList);
     document.getElementById('filterCategory').addEventListener('change', loadTransactionList);
 
-    // Budget settings
-    document.getElementById('livingPercent').addEventListener('input', updateBudgetDisplay);
-    document.getElementById('savingPercent').addEventListener('input', updateBudgetDisplay);
-    document.getElementById('playingPercent').addEventListener('input', updateBudgetDisplay);
-    document.getElementById('emergencyPercent').addEventListener('input', updateBudgetDisplay);
-    document.getElementById('gajiInput').addEventListener('input', updateBudgetDisplay);
+    // Budget settings - ONLY amount inputs (sliders are display-only)
+    document.getElementById('livingAmountInput').addEventListener('input', () => syncPercentFromAmount('living'));
+    document.getElementById('savingAmountInput').addEventListener('input', () => syncPercentFromAmount('saving'));
+    document.getElementById('playingAmountInput').addEventListener('input', () => syncPercentFromAmount('playing'));
+    document.getElementById('emergencyAmountInput').addEventListener('input', () => syncPercentFromAmount('emergency'));
 
     document.getElementById('updateGaji').addEventListener('click', function() {
         const budget = getUserBudget();
-        budget.gaji = parseInt(document.getElementById('gajiInput').value);
+        const newGaji = parseInt(document.getElementById('gajiInput').value) || 0;
+
+        // Update gaji but KEEP existing amounts unchanged!
+        budget.gaji = newGaji;
+
+        // If amounts exist, keep them. Only recalculate percentages for display.
+        if (budget.livingAmt !== undefined) {
+            // Don't change amounts - just update the percentage displays
+            const livingPct = newGaji > 0 ? Math.round((budget.livingAmt / newGaji) * 100) : 0;
+            const savingPct = newGaji > 0 ? Math.round((budget.savingAmt / newGaji) * 100) : 0;
+            const playingPct = newGaji > 0 ? Math.round((budget.playingAmt / newGaji) * 100) : 0;
+            const emergencyPct = newGaji > 0 ? Math.round((budget.emergencyAmt / newGaji) * 100) : 0;
+
+            budget.living = livingPct;
+            budget.saving = savingPct;
+            budget.playing = playingPct;
+            budget.emergency = emergencyPct;
+        }
+
         saveUserBudget(budget);
-        updateBudgetDisplay();
+        loadBudgetSettings(); // Reload to update display
         showToast('Salary updated successfully!');
     });
 
     document.getElementById('saveBudget').addEventListener('click', function() {
-        const living = parseInt(document.getElementById('livingPercent').value);
-        const saving = parseInt(document.getElementById('savingPercent').value);
-        const playing = parseInt(document.getElementById('playingPercent').value);
-        const emergency = parseInt(document.getElementById('emergencyPercent').value);
+        const gaji = parseInt(document.getElementById('gajiInput').value) || 0;
 
-        if (living + saving + playing + emergency !== 100) {
-            showToast('Total percentage must be 100%!', 'error');
-            return;
-        }
+        // Get EXACT amounts from input fields - these are the source of truth!
+        const livingAmt = parseInt(document.getElementById('livingAmountInput').value) || 0;
+        const savingAmt = parseInt(document.getElementById('savingAmountInput').value) || 0;
+        const playingAmt = parseInt(document.getElementById('playingAmountInput').value) || 0;
+        const emergencyAmt = parseInt(document.getElementById('emergencyAmountInput').value) || 0;
 
+        // Get percentages for display purposes only
+        const living = parseInt(document.getElementById('livingPercent').value) || 0;
+        const saving = parseInt(document.getElementById('savingPercent').value) || 0;
+        const playing = parseInt(document.getElementById('playingPercent').value) || 0;
+        const emergency = parseInt(document.getElementById('emergencyPercent').value) || 0;
+
+        // Save both amounts AND percentages
         const budget = {
-            gaji: parseInt(document.getElementById('gajiInput').value),
+            gaji,
+            // AMOUNTS - these are the source of truth!
+            livingAmt,
+            savingAmt,
+            playingAmt,
+            emergencyAmt,
+            // Percentages for display only
             living,
             saving,
             playing,
             emergency
         };
         saveUserBudget(budget);
-        showToast('Budget settings saved successfully!');
+        showToast('Budget saved successfully!');
         updateDashboard();
     });
 
@@ -1358,7 +1640,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('quickIncomeForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const amount = parseInt(document.getElementById('quickIncomeAmount').value);
-        const description = document.getElementById('quickIncomeDesc').value || 'Pemasukan Tambahan';
+        const description = document.getElementById('quickIncomeDesc').value || 'Additional Income';
         const date = document.getElementById('quickIncomeDate').value;
 
         const tx = {
@@ -1376,13 +1658,95 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTransactionList();
     });
 
-    // Close modal when clicking outside
-    document.getElementById('incomeModal').addEventListener('click', function(e) {
+    // Edit transaction form
+    document.getElementById('editTransactionForm').addEventListener('submit', saveEditedTransaction);
+
+    // Close edit modal when clicking outside
+    document.getElementById('editModal').addEventListener('click', function(e) {
         if (e.target === this) {
-            closeIncomeModal();
+            closeEditModal();
         }
     });
 });
+
+// ==================== YEAR FILTER FUNCTIONS ====================
+function initYearSelectors() {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    // Start from current year going forward
+    for (let y = currentYear; y <= currentYear + 10; y++) {
+        years.push(y);
+    }
+
+    const yearSelectors = ['dashboardYear', 'filterYear', 'reportYear'];
+    yearSelectors.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.innerHTML = years.map(y =>
+                `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`
+            ).join('');
+        }
+    });
+
+    // Set current month
+    const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+    const monthSelectors = ['dashboardMonthSelect', 'filterMonthSelect', 'reportMonthSelect'];
+    monthSelectors.forEach(id => {
+        const select = document.getElementById(id);
+        if (select) {
+            select.value = currentMonth;
+        }
+    });
+
+    // Initialize hidden inputs
+    updateDashboardMonth();
+    updateFilterMonth();
+    updateReportMonth();
+}
+
+function updateDashboardMonth() {
+    const year = document.getElementById('dashboardYear').value;
+    const month = document.getElementById('dashboardMonthSelect').value;
+    document.getElementById('dashboardMonth').value = `${year}-${month}`;
+    updateDashboard();
+}
+
+function updateFilterMonth() {
+    const year = document.getElementById('filterYear').value;
+    const month = document.getElementById('filterMonthSelect').value;
+    document.getElementById('filterMonth').value = `${year}-${month}`;
+    loadTransactionList();
+}
+
+function updateReportMonth() {
+    const year = document.getElementById('reportYear').value;
+    const month = document.getElementById('reportMonthSelect').value;
+    document.getElementById('reportMonth').value = `${year}-${month}`;
+}
+
+// ==================== DYNAMIC CATEGORY OPTIONS ====================
+function updateCategoryOptions() {
+    const type = document.getElementById('txType').value;
+    const categorySelect = document.getElementById('txCategory');
+
+    if (type === 'income') {
+        categorySelect.innerHTML = `
+            <option value="salary">Salary</option>
+            <option value="bonus">Bonus</option>
+            <option value="thr">THR</option>
+            <option value="freelance">Freelance</option>
+            <option value="investment">Investment</option>
+            <option value="other">Other</option>
+        `;
+    } else {
+        categorySelect.innerHTML = `
+            <option value="living">Living</option>
+            <option value="saving">Saving</option>
+            <option value="playing">Playing</option>
+            <option value="emergency">Emergency</option>
+        `;
+    }
+}
 
 // ==================== QUICK INCOME MODAL ====================
 function showQuickIncome() {
